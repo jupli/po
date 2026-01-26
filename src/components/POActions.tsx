@@ -50,7 +50,7 @@ export default function POActions({ po }: { po: PurchaseOrder }) {
         </button>
       )}
       
-      {po.status !== 'RECEIVED' && po.status !== 'CANCELLED' && (
+      {(po.status === 'PENDING' || po.status === 'APPROVED') && (
         <button 
           onClick={() => handleStatusChange('CANCELLED')}
           disabled={loading}
