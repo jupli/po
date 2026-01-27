@@ -41,7 +41,7 @@ export const ITEM_CATEGORIES = {
     'Buah Naga', 'Kelengkeng', 'Manggis', 'Duku'
   ],
   'Supplier Susu': [
-    'Susu segar', 'Susu UHT', 'Susu kental manis', 'Susu bubuk', 'Keju', 'Cheddar',
+    'Susu segar', 'Susu UHT', 'Susu UHT kotak', 'Susu kental manis', 'Susu bubuk', 'Keju', 'Cheddar',
     'Mozzarella', 'Parmesan', 'Yogurt', 'Mentega', 'Butter', 'Margarin', 'Cream', 'Ice Cream'
   ],
   'Supplier Beras': [
