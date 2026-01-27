@@ -21,6 +21,7 @@ export default function ReceiveForm({ po }: { po: any }) {
   const [items, setItems] = useState(po.items.map((item: any) => ({
     productId: item.productId,
     productName: item.product.name,
+    productCategory: item.product.category || 'Lain-lain',
     quantity: item.quantity, // Default to PO quantity
     quantityRejected: 0,
     condition: 'Baik'
@@ -141,65 +142,87 @@ export default function ReceiveForm({ po }: { po: any }) {
       {/* Items List */}
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Detail Bahan yang Dikirim</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Barang</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty PO</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty Diterima (Bagus)</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty Rusak (Retur)</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kondisi</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {items.map((item: any, idx: number) => (
-                <tr key={item.productId}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.productName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{po.items[idx].quantity}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <input 
-                      type="number" 
-                      min="0"
-                      value={item.quantity}
-                      onChange={(e) => {
-                        const newItems = [...items]
-                        newItems[idx].quantity = Number(e.target.value)
-                        setItems(newItems)
-                      }}
-                      className="w-24 border border-gray-300 rounded-md px-2 py-1"
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <input 
-                      type="number" 
-                      min="0"
-                      value={item.quantityRejected}
-                      onChange={(e) => {
-                        const newItems = [...items]
-                        newItems[idx].quantityRejected = Number(e.target.value)
-                        setItems(newItems)
-                      }}
-                      className="w-24 border border-red-300 rounded-md px-2 py-1 bg-red-50"
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <input 
-                      type="text" 
-                      value={item.condition}
-                      onChange={(e) => {
-                        const newItems = [...items]
-                        newItems[idx].condition = e.target.value
-                        setItems(newItems)
-                      }}
-                      className="w-full border border-gray-300 rounded-md px-2 py-1"
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        
+        {/* Helper function to render table */}
+        {['Bahan Kering', 'Bahan Basah', 'Lain-lain'].map((category) => {
+            const categoryItems = items.filter((i: any) => i.productCategory === category)
+            if (categoryItems.length === 0) return null
+
+            return (
+                <div key={category} className="mb-8 last:mb-0">
+                    <h4 className={`text-md font-bold mb-2 px-2 py-1 inline-block rounded ${
+                        category === 'Bahan Kering' ? 'bg-orange-100 text-orange-800' : 
+                        category === 'Bahan Basah' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                        {category}
+                    </h4>
+                    <div className="overflow-x-auto border rounded-lg">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Barang</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty PO</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty Diterima (Bagus)</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty Rusak (Retur)</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kondisi</th>
+                        </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                        {categoryItems.map((item: any) => {
+                            // Find original index in full items array to update state correctly
+                            const originalIndex = items.findIndex((i: any) => i.productId === item.productId)
+                            
+                            return (
+                                <tr key={item.productId}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.productName}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{po.items.find((i: any) => i.productId === item.productId)?.quantity || 0}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <input 
+                                    type="number" 
+                                    min="0"
+                                    value={item.quantity}
+                                    onChange={(e) => {
+                                        const newItems = [...items]
+                                        newItems[originalIndex].quantity = Number(e.target.value)
+                                        setItems(newItems)
+                                    }}
+                                    className="w-24 border border-gray-300 rounded-md px-2 py-1"
+                                    />
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <input 
+                                    type="number" 
+                                    min="0"
+                                    value={item.quantityRejected}
+                                    onChange={(e) => {
+                                        const newItems = [...items]
+                                        newItems[originalIndex].quantityRejected = Number(e.target.value)
+                                        setItems(newItems)
+                                    }}
+                                    className="w-24 border border-red-300 rounded-md px-2 py-1 bg-red-50"
+                                    />
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <input 
+                                    type="text" 
+                                    value={item.condition}
+                                    onChange={(e) => {
+                                        const newItems = [...items]
+                                        newItems[originalIndex].condition = e.target.value
+                                        setItems(newItems)
+                                    }}
+                                    className="w-full border border-gray-300 rounded-md px-2 py-1"
+                                    />
+                                </td>
+                                </tr>
+                            )
+                        })}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            )
+        })}
       </div>
 
       {/* Signatures */}
