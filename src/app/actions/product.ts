@@ -32,7 +32,7 @@ export async function getCategories() {
       select: { category: true },
       distinct: ['category']
     })
-    return products.map(p => p.category).filter(Boolean)
+    return products.map((p: { category: string | null }) => p.category).filter(Boolean)
   } catch (error) {
     console.error('Database Error:', error)
     return []
