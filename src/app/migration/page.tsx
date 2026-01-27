@@ -303,38 +303,30 @@ export default async function MigrationPage() {
       'Udang', 'Cumi', 'Telur', 'Bawang merah', 'Bawang putih', 'Cabai', 'Jahe', 'Kunyit', 'Lengkuas', 'Serai', 'Daun salam', 
       'Daun jeruk', 'Kemiri', 'Susu', 'Yogurt', 'Keju', 'Mentega', 'Tahu', 'Tempe', 'Oncom', 'Sosis', 'Bakso'
     ]
-
+    
+    // Additional mapping for specific sub-categories if needed in future
+    // For now we just use the list names as the "Sub Category" implicitly or just grouping by Main Category
+    
     log('Classifying Products...')
     const productsToClassify = await prisma.product.findMany()
 
-    for (const product of productsToClassify) {
-      const nameLower = product.name.toLowerCase()
-      let category = '' // Default unknown
-
-      // Check Dry Goods
-      if (dryGoods.some(k => nameLower.includes(k.toLowerCase()))) {
-        category = 'Bahan Kering'
-      }
-      // Check Wet Goods (Override if match, as Wet is more specific usually e.g. "Susu" vs "Susu Bubuk")
-      // Actually, "Susu Bubuk" (Dry) contains "Susu" (Wet). So we should check Longest match first.
-      // But here I'll check Wet first, then Dry. If "Susu Bubuk", it matches "Susu" (Wet) -> WET. Incorrect.
-      // So I should merge lists and sort by length descending.
-    }
-    
-    // Better Logic: Combined Map
     const categoryMap: Record<string, string> = {}
+    // We want to map keywords to "Bahan Kering" or "Bahan Basah"
     dryGoods.forEach(k => categoryMap[k.toLowerCase()] = 'Bahan Kering')
     wetGoods.forEach(k => categoryMap[k.toLowerCase()] = 'Bahan Basah')
     
+    // Sort by length desc to prioritize "Susu Bubuk" over "Susu"
     const sortedCategoryKeywords = Object.entries(categoryMap).sort((a, b) => b[0].length - a[0].length)
 
     for (const product of productsToClassify) {
         const nameLower = product.name.toLowerCase()
         let newCategory = null
+        let subCategory = null // Not storing sub-category in DB yet, but could be useful
 
         for (const [keyword, cat] of sortedCategoryKeywords) {
             if (nameLower.includes(keyword)) {
                 newCategory = cat
+                // In a real app we might want to store the specific keyword as a "Type" or "SubCategory"
                 break
             }
         }

@@ -14,6 +14,31 @@ export async function getProducts() {
   }
 }
 
+export async function getProductsByCategory(category: string) {
+  try {
+    return await prisma.product.findMany({
+      where: { category },
+      orderBy: { name: 'asc' }
+    })
+  } catch (error) {
+    console.error('Database Error:', error)
+    return []
+  }
+}
+
+export async function getCategories() {
+  try {
+    const products = await prisma.product.findMany({
+      select: { category: true },
+      distinct: ['category']
+    })
+    return products.map(p => p.category).filter(Boolean)
+  } catch (error) {
+    console.error('Database Error:', error)
+    return []
+  }
+}
+
 export async function createProduct(formData: FormData) {
   const name = formData.get('name') as string
   const sku = formData.get('sku') as string
