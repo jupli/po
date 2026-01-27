@@ -3,6 +3,7 @@
 import { POStatus, PurchaseOrder } from '@prisma/client'
 import { updatePOStatus } from '@/app/actions/po'
 import { useState } from 'react'
+import Link from 'next/link'
 
 export default function POActions({ po }: { po: PurchaseOrder }) {
   const [loading, setLoading] = useState(false)
@@ -21,9 +22,15 @@ export default function POActions({ po }: { po: PurchaseOrder }) {
   }
 
   return (
-    <div className="flex space-x-2">
+    <div className="flex space-x-2 items-center">
       {po.status === 'PENDING' && (
         <>
+          <Link 
+            href={`/purchase-orders/${po.id}/edit`} 
+            className="text-yellow-600 hover:text-yellow-900 text-xs font-bold px-2"
+          >
+            Edit
+          </Link>
           <button 
             onClick={() => handleStatusChange('KIRIM')}
             disabled={loading}

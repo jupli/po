@@ -269,3 +269,41 @@ export async function updatePOStatus(id: string, status: POStatus) {
     return { success: false, error: 'Failed to update PO status' }
   }
 }
+
+export async function updatePurchaseOrderItems(poId: string, items: { id: string, quantity: number }[]) {
+  try {
+    await prisma.$transaction(async (tx: any) => {
+       for (const item of items) {
+         // Get current item to get unitPrice
+         const currentItem = await tx.purchaseOrderItem.findUnique({ where: { id: item.id } })
+         if (!currentItem) continue
+         
+         const newTotal = item.quantity * currentItem.unitPrice
+         
+         await tx.purchaseOrderItem.update({
+           where: { id: item.id },
+           data: {
+             quantity: item.quantity,
+             total: newTotal
+           }
+         })
+       }
+       
+       // Recalculate PO Total
+       const allItems = await tx.purchaseOrderItem.findMany({ where: { purchaseOrderId: poId } })
+       const totalAmount = allItems.reduce((sum: number, item: any) => sum + item.total, 0)
+       
+       await tx.purchaseOrder.update({
+         where: { id: poId },
+         data: { totalAmount }
+       })
+    })
+    
+    revalidatePath('/purchase-orders')
+    revalidatePath(`/purchase-orders/${poId}`)
+    return { success: true }
+  } catch (error) {
+    console.error(error)
+    return { success: false, error: 'Failed to update PO items' }
+  }
+}
