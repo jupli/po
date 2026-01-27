@@ -284,6 +284,70 @@ export default async function MigrationPage() {
         }
     }
 
+    // 6. Update Product Categories (Bahan Kering vs Bahan Basah)
+    const dryGoods = [
+      'Beras', 'Tepung terigu', 'Tepung beras', 'Tepung maizena', 'Tepung tapioka', 'Gula pasir', 'Gula aren', 'gula merah', 
+      'Garam', 'Kacang tanah', 'Kacang hijau', 'Kacang merah', 'Kacang kedelai', 'Kacang tolo', 'Kacang polong', 'Wijen', 
+      'Jagung pipil', 'Bawang putih bubuk', 'Bawang merah goreng', 'Ketumbar', 'Merica', 'lada', 'Jintan', 'Pala', 'Cengkeh', 
+      'Kayu manis', 'Kapulaga', 'Kunyit bubuk', 'Jahe bubuk', 'Lengkuas bubuk', 'Cabai bubuk', 'Daun salam kering', 
+      'Daun jeruk kering', 'Mi kering', 'Bihun', 'Soun', 'Makaroni', 'Spaghetti', 'Tepung panir', 'breadcrumbs', 'Abon', 
+      'Dendeng', 'Ikan asin', 'Kaldu bubuk', 'Penyedap rasa', 'Vanili', 'Cokelat bubuk', 'Santan bubuk', 'Susu bubuk', 
+      'Ragi instan', 'Baking powder', 'Baking soda', 'Minyak goreng', 'Margarin', 'Minyak wijen', 'Minyak zaitun', 
+      'Sereal', 'Oatmeal', 'Granola', 'Biskuit', 'Crackers'
+    ]
+
+    const wetGoods = [
+      'Bayam', 'Kangkung', 'Sawi', 'Pakcoy', 'Kubis', 'kol', 'Wortel', 'Kentang', 'Tomat', 'Mentimun', 'Terong', 'Buncis', 
+      'Kacang panjang', 'Labu siam', 'Jagung manis', 'Brokoli', 'Kembang kol', 'Daun bawang', 'Seledri', 'Selada', 'Pisang', 
+      'Apel', 'Jeruk', 'Pepaya', 'Semangka', 'Melon', 'Mangga', 'Pir', 'Anggur', 'Daging', 'Ikan', 'Kepiting', 'Rajungan', 
+      'Udang', 'Cumi', 'Telur', 'Bawang merah', 'Bawang putih', 'Cabai', 'Jahe', 'Kunyit', 'Lengkuas', 'Serai', 'Daun salam', 
+      'Daun jeruk', 'Kemiri', 'Susu', 'Yogurt', 'Keju', 'Mentega', 'Tahu', 'Tempe', 'Oncom', 'Sosis', 'Bakso'
+    ]
+
+    log('Classifying Products...')
+    const productsToClassify = await prisma.product.findMany()
+
+    for (const product of productsToClassify) {
+      const nameLower = product.name.toLowerCase()
+      let category = '' // Default unknown
+
+      // Check Dry Goods
+      if (dryGoods.some(k => nameLower.includes(k.toLowerCase()))) {
+        category = 'Bahan Kering'
+      }
+      // Check Wet Goods (Override if match, as Wet is more specific usually e.g. "Susu" vs "Susu Bubuk")
+      // Actually, "Susu Bubuk" (Dry) contains "Susu" (Wet). So we should check Longest match first.
+      // But here I'll check Wet first, then Dry. If "Susu Bubuk", it matches "Susu" (Wet) -> WET. Incorrect.
+      // So I should merge lists and sort by length descending.
+    }
+    
+    // Better Logic: Combined Map
+    const categoryMap: Record<string, string> = {}
+    dryGoods.forEach(k => categoryMap[k.toLowerCase()] = 'Bahan Kering')
+    wetGoods.forEach(k => categoryMap[k.toLowerCase()] = 'Bahan Basah')
+    
+    const sortedCategoryKeywords = Object.entries(categoryMap).sort((a, b) => b[0].length - a[0].length)
+
+    for (const product of productsToClassify) {
+        const nameLower = product.name.toLowerCase()
+        let newCategory = null
+
+        for (const [keyword, cat] of sortedCategoryKeywords) {
+            if (nameLower.includes(keyword)) {
+                newCategory = cat
+                break
+            }
+        }
+
+        if (newCategory && product.category !== newCategory) {
+            log(`  Classifying ${product.name} -> ${newCategory}`)
+            await prisma.product.update({
+                where: { id: product.id },
+                data: { category: newCategory }
+            })
+        }
+    }
+
     log('Migration completed successfully.')
 
   } catch (error: any) {
