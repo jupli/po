@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 
 export default function Sidebar() {
   const [isPurchasingOpen, setIsPurchasingOpen] = useState(true)
+  const [isInventoryOpen, setIsInventoryOpen] = useState(true)
   const pathname = usePathname()
 
   return (
@@ -60,12 +61,41 @@ export default function Sidebar() {
         >
           Purchase Orders
         </Link>
-        <Link 
-          href="/products" 
-          className={`p-2 hover:bg-gray-800 rounded ${pathname.startsWith('/products') ? 'bg-gray-800' : ''}`}
-        >
-          Products (Inventory)
-        </Link>
+        
+        {/* Inventory Menu */}
+        <div>
+          <button 
+            onClick={() => setIsInventoryOpen(!isInventoryOpen)}
+            className="w-full text-left p-2 hover:bg-gray-800 rounded flex justify-between items-center"
+          >
+            <span>Products (Inventory)</span>
+            <span className="text-xs">{isInventoryOpen ? '▼' : '▶'}</span>
+          </button>
+          
+          {isInventoryOpen && (
+            <div className="ml-4 flex flex-col space-y-1 mt-1 border-l border-gray-700 pl-2">
+              <Link 
+                href="/inventory/incoming" 
+                className={`p-2 text-sm hover:bg-gray-800 rounded ${pathname === '/inventory/incoming' ? 'bg-gray-800' : ''}`}
+              >
+                1. Bahan Masuk
+              </Link>
+              <Link 
+                href="/inventory/outgoing" 
+                className={`p-2 text-sm hover:bg-gray-800 rounded ${pathname === '/inventory/outgoing' ? 'bg-gray-800' : ''}`}
+              >
+                2. Bahan Keluar
+              </Link>
+              <Link 
+                href="/products" 
+                className={`p-2 text-sm hover:bg-gray-800 rounded ${pathname === '/products' ? 'bg-gray-800' : ''}`}
+              >
+                3. Stock Bahan
+              </Link>
+            </div>
+          )}
+        </div>
+
         <Link 
           href="/suppliers" 
           className={`p-2 hover:bg-gray-800 rounded ${pathname.startsWith('/suppliers') ? 'bg-gray-800' : ''}`}

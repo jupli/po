@@ -72,6 +72,116 @@ export async function getPurchaseOrderById(id: string) {
   }
 }
 
+export async function getPurchaseOrdersByStatus(status: POStatus) {
+  try {
+    const orders = await prisma.purchaseOrder.findMany({
+      where: { status },
+      include: {
+        supplier: true,
+        items: {
+          include: {
+            product: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return orders.map((order: any) => ({
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      items: order.items.map((item: any) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+        total: Number(item.total),
+        product: item.product ? {
+          ...item.product,
+          price: Number(item.product.price)
+        } : null
+      }))
+    }))
+  } catch (error) {
+    console.error('Database Error:', error)
+    return []
+  }
+}
+
+export async function createGoodsReceipt(data: {
+  poId: string
+  doNumber: string
+  receivedAt: Date
+  receiver: string
+  receiverSign: string
+  courier: string
+  courierSign: string
+  condition: string
+  notes?: string
+  items: { productId: string, quantity: number, condition?: string }[]
+}) {
+  try {
+    const result = await prisma.$transaction(async (tx: any) => {
+      // 1. Create GoodsReceipt
+      const receipt = await tx.goodsReceipt.create({
+        data: {
+          poId: data.poId,
+          doNumber: data.doNumber,
+          receivedAt: data.receivedAt,
+          receiver: data.receiver,
+          receiverSign: data.receiverSign,
+          courier: data.courier,
+          courierSign: data.courierSign,
+          condition: data.condition,
+          notes: data.notes,
+          items: {
+            create: data.items.map((item: any) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              condition: item.condition
+            }))
+          }
+        }
+      })
+
+      // 2. Update PO Status to RECEIVED
+      const po = await tx.purchaseOrder.update({
+        where: { id: data.poId },
+        data: { status: 'RECEIVED' }
+      })
+
+      // 3. Update Inventory & Create Stock Movement
+      for (const item of data.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            quantity: { increment: item.quantity }
+          }
+        })
+
+        await tx.stockMovement.create({
+          data: {
+            productId: item.productId,
+            type: MovementType.IN,
+            quantity: item.quantity,
+            reference: `${po.poNumber} / ${data.doNumber}`,
+            description: `Received via Goods Receipt (DO: ${data.doNumber})`
+          }
+        })
+      }
+
+      return receipt
+    })
+
+    revalidatePath('/inventory/incoming')
+    revalidatePath('/purchase-orders')
+    revalidatePath('/products')
+    
+    return { success: true, data: result }
+  } catch (error) {
+    console.error('Failed to create goods receipt:', error)
+    return { success: false, error: 'Failed to create goods receipt' }
+  }
+}
+
 export async function createPurchaseOrder(data: {
   supplierId: string,
   items: { productId: string, quantity: number, unitPrice: number }[]

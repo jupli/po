@@ -2,9 +2,10 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import EditSupplierForm from '../../../../components/EditSupplierForm'
 
-export default async function EditSupplierPage({ params }: { params: { id: string } }) {
+export default async function EditSupplierPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supplier = await prisma.supplier.findUnique({
-    where: { id: params.id }
+    where: { id }
   })
 
   if (!supplier) {

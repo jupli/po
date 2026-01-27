@@ -23,6 +23,7 @@ model Product {
 
   purchaseOrderItems PurchaseOrderItem[]
   stockMovements     StockMovement[]
+  goodsReceiptItems  GoodsReceiptItem[]
 }
 
 model Supplier {
@@ -42,6 +43,7 @@ model Supplier {
 enum POStatus {
   PENDING
   APPROVED
+  KIRIM
   REJECTED
   RECEIVED
   CANCELLED
@@ -59,8 +61,38 @@ model PurchaseOrder {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  items PurchaseOrderItem[]
+  items         PurchaseOrderItem[]
+  goodsReceipt  GoodsReceipt?
 }
+
+model GoodsReceipt {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  poId        String   @unique @db.ObjectId
+  purchaseOrder PurchaseOrder @relation(fields: [poId], references: [id])
+  doNumber    String
+  receivedAt  DateTime
+  receiver    String?
+  receiverSign String? // Base64 signature
+  courier     String?
+  courierSign String? // Base64 signature
+  condition   String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       GoodsReceiptItem[]
+}
+
+model GoodsReceiptItem {
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  goodsReceiptId  String       @db.ObjectId
+  goodsReceipt    GoodsReceipt @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  productId       String       @db.ObjectId
+  product         Product      @relation(fields: [productId], references: [id])
+  quantity        Int
+  condition       String?
+}
+
 
 model PurchaseOrderItem {
   id              String        @id @default(auto()) @map("_id") @db.ObjectId

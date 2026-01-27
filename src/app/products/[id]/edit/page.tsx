@@ -3,9 +3,10 @@ import { updateProduct } from '@/app/actions/product'
 import EditProductForm from '../../../../components/EditProductForm'
 import { notFound } from 'next/navigation'
 
-export default async function EditProductPage({ params }: { params: { id: string } }) {
+export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const product = await prisma.product.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       stockMovements: {
         orderBy: { createdAt: 'desc' },
@@ -41,7 +42,7 @@ export default async function EditProductPage({ params }: { params: { id: string
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {product.stockMovements.map((move) => (
+                {product.stockMovements.map((move: any) => (
                   <tr key={move.id}>
                     <td className="px-4 py-2 text-xs text-gray-500">
                       {new Date(move.createdAt).toLocaleDateString()}
