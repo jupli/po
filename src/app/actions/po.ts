@@ -18,10 +18,10 @@ export async function getPurchaseOrders() {
       orderBy: { createdAt: 'desc' }
     })
 
-    return orders.map(order => ({
+    return orders.map((order: any) => ({
       ...order,
       totalAmount: Number(order.totalAmount),
-      items: order.items.map(item => ({
+      items: order.items.map((item: any) => ({
         ...item,
         unitPrice: Number(item.unitPrice),
         total: Number(item.total)
@@ -52,7 +52,7 @@ export async function getPurchaseOrderById(id: string) {
     return {
       ...order,
       totalAmount: Number(order.totalAmount),
-      items: order.items.map(item => ({
+      items: order.items.map((item: any) => ({
         ...item,
         unitPrice: Number(item.unitPrice),
         total: Number(item.total)
