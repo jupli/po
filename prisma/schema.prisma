@@ -12,7 +12,7 @@ model Product {
   name        String
   sku         String   @unique
   description String?
-  quantity    Int      @default(0)
+  quantity    Float    @default(0)
   price       Float    @default(0)
   unit        String   @default("pcs")
   category    String?
@@ -95,8 +95,8 @@ model GoodsReceiptItem {
   goodsReceipt    GoodsReceipt @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
   productId       String       @db.ObjectId
   product         Product      @relation(fields: [productId], references: [id])
-  quantity        Int
-  quantityRejected Int      @default(0)
+  quantity        Float
+  quantityRejected Float      @default(0)
   condition       String?
 }
 
@@ -106,7 +106,7 @@ model PurchaseOrderItem {
   purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
   productId       String        @db.ObjectId
   product         Product       @relation(fields: [productId], references: [id])
-  quantity        Int
+  quantity        Float
   unit            String?
   price           Float
   notes           String?
@@ -117,7 +117,7 @@ model StockMovement {
   productId   String   @db.ObjectId
   product     Product  @relation(fields: [productId], references: [id])
   type        MovementType
-  quantity    Int
+  quantity    Float
   reference   String?  // PO Number or "MANUAL"
   notes       String?
   createdAt   DateTime @default(now())
