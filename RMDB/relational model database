@@ -1,0 +1,229 @@
+RMDB Gudang Bahan Pangan (Semua Jenis Makanan)
+1. Ruang Lingkup Sistem
+
+Gudang menyimpan:
+
+Bahan kering (beras, tepung, gula, bumbu)
+
+Minuman
+
+Sayur & buah
+
+Daging (sapi, ayam, kambing, dll)
+
+Ikan & hasil laut
+
+Produk segar, dingin, dan beku
+
+➡️ Satu model database untuk semua, tanpa tabel khusus seafood.
+
+2. Master Data
+kategori_bahan
+
+Klasifikasi bahan pangan
+
+kategori_id (PK)
+
+nama_kategori
+(Bahan Kering, Minuman, Sayur, Buah, Daging, Ikan, Hasil Laut, Olahan)
+
+deskripsi
+
+jenis_penyimpanan
+
+Jenis penyimpanan fisik
+
+jenis_penyimpanan_id (PK)
+
+nama_jenis
+(kering, chiller, freezer)
+
+suhu_min
+
+suhu_max
+
+satuan
+
+satuan_id (PK)
+
+nama_satuan
+(kg, gram, liter, pcs, ekor)
+
+supplier
+
+supplier_id (PK)
+
+nama_supplier
+
+jenis_supplier
+(petani, nelayan, peternak, distributor, pabrik)
+
+alamat
+
+telepon
+
+3. Data Bahan Pangan
+bahan
+
+Master semua bahan makanan
+
+bahan_id (PK)
+
+kode_bahan
+
+nama_bahan
+
+kategori_id (FK)
+
+satuan_id (FK)
+
+jenis_penyimpanan_id (FK)
+
+masa_simpan_hari
+
+created_at
+
+➡️ Netral: beras & daging sama-sama “bahan”.
+
+4. Gudang & Lokasi
+gudang
+
+gudang_id (PK)
+
+nama_gudang
+
+alamat
+
+lokasi
+
+Rak / freezer / area
+
+lokasi_id (PK)
+
+gudang_id (FK)
+
+kode_lokasi
+
+jenis_penyimpanan_id (FK)
+
+5. Batch & Stok (Kunci Gudang Pangan)
+batch
+
+Membedakan bahan berdasarkan waktu & asal
+
+batch_id (PK)
+
+bahan_id (FK)
+
+supplier_id (FK)
+
+tanggal_produksi
+
+tanggal_kadaluarsa
+
+tanggal_masuk
+
+harga_beli
+
+stok
+
+Stok per batch & lokasi
+
+stok_id (PK)
+
+batch_id (FK)
+
+lokasi_id (FK)
+
+jumlah_stok
+
+✔ FIFO / FEFO
+✔ Cocok untuk bahan segar & beku
+✔ Aman untuk audit pangan
+
+6. Transaksi Masuk
+penerimaan
+
+penerimaan_id (PK)
+
+tanggal_terima
+
+supplier_id (FK)
+
+user_id (FK)
+
+catatan
+
+penerimaan_detail
+
+detail_terima_id (PK)
+
+penerimaan_id (FK)
+
+batch_id (FK)
+
+jumlah
+
+7. Transaksi Keluar
+pengeluaran
+
+pengeluaran_id (PK)
+
+tanggal_keluar
+
+tujuan
+
+user_id (FK)
+
+catatan
+
+pengeluaran_detail
+
+detail_keluar_id (PK)
+
+pengeluaran_id (FK)
+
+stok_id (FK)
+
+jumlah
+
+8. User Sistem
+users
+
+user_id (PK)
+
+nama
+
+role
+(admin, quality_control, petugas_gudang)
+
+9. Relational Model (Final)
+KATEGORI_BAHAN (kategori_id PK)
+JENIS_PENYIMPANAN (jenis_penyimpanan_id PK)
+SATUAN (satuan_id PK)
+
+BAHAN (bahan_id PK,
+       kategori_id FK,
+       satuan_id FK,
+       jenis_penyimpanan_id FK)
+
+SUPPLIER (supplier_id PK)
+
+GUDANG (gudang_id PK)
+LOKASI (lokasi_id PK, gudang_id FK)
+
+BATCH (batch_id PK,
+       bahan_id FK,
+       supplier_id FK)
+
+STOK (stok_id PK,
+      batch_id FK,
+      lokasi_id FK)
+
+PENERIMAAN (penerimaan_id PK)
+PENERIMAAN_DETAIL (detail_terima_id PK)
+
+PENGELUARAN (pengeluaran_id PK)
+PENGELUARAN_DETAIL (detail_keluar_id PK)
+
+USERS (user_id PK)
