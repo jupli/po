@@ -2,6 +2,8 @@ import { getPurchaseOrdersByStatus, getReceivedPurchaseOrders } from '@/app/acti
 import Link from 'next/link'
 import IncomingArchive from '@/components/IncomingArchive'
 
+export const dynamic = 'force-dynamic'
+
 export default async function IncomingPage() {
   // @ts-ignore
   const pendingArrivals = await getPurchaseOrdersByStatus('KIRIM')

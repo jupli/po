@@ -2,6 +2,8 @@ import { getPurchaseOrders } from '../actions/po'
 import Link from 'next/link'
 import POList from './POList'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PurchaseOrdersPage() {
   const purchaseOrders = await getPurchaseOrders()
 
