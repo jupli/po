@@ -1,18 +1,23 @@
 
 import { PrismaClient } from '@prisma/client'
-import dotenv from 'dotenv'
-
-dotenv.config()
 
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('DATABASE_URL:', process.env.DATABASE_URL)
-  const products = await prisma.product.findMany()
-  console.log('Products count:', products.length)
-  console.log('Products:', products.map((p: any) => p.name))
+  const items = await prisma.deliveryQueue.findMany({
+    orderBy: { cookDate: 'desc' }
+  })
+  
+  console.log('Total items in DeliveryQueue:', items.length)
+  console.table(items.map(i => ({
+    id: i.id,
+    menu: i.menuName,
+    qty: i.quantity,
+    status: i.status,
+    cookDate: i.cookDate.toLocaleString()
+  })))
 }
 
 main()
-  .catch(e => console.error(e))
-  .finally(async () => await prisma.$disconnect())
+  .catch(console.error)
+  .finally(() => prisma.$disconnect())

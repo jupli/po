@@ -32,15 +32,15 @@ async function main() {
   })
 
   // Delete Recipe data
-  // console.log('Deleting RecipeItems...')
-  // await prisma.recipeItem.deleteMany({})
+  console.log('Deleting RecipeItems...')
+  await prisma.recipeItem.deleteMany({})
 
-  // console.log('Deleting Recipes...')
-  // await prisma.recipe.deleteMany({})
+  console.log('Deleting Recipes...')
+  await prisma.recipe.deleteMany({})
 
   // Optional: Delete Master Data
-  // console.log('Deleting Products...')
-  // await prisma.product.deleteMany({})
+  console.log('Deleting Products...')
+  await prisma.product.deleteMany({})
   
   // console.log('Deleting Suppliers...')
   // await prisma.supplier.deleteMany({})

@@ -71,22 +71,47 @@ export async function generatePOsFromRequest(requestNumber: string, items: Reque
 
       // 3. Process Items for this PO
       for (const item of categoryItems) {
+        // Normalize name and SKU
+        const normalizedName = item.name.trim()
+        const skuCandidate = normalizedName.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '')
+
         // Find or Create Product
         let product = await prisma.product.findUnique({
-          where: { sku: item.name.toUpperCase().replace(/\s+/g, '-') }
+          where: { sku: skuCandidate }
         })
 
         if (!product) {
-          product = await prisma.product.create({
-            data: {
-              name: item.name,
-              sku: item.name.toUpperCase().replace(/\s+/g, '-'), // Simple SKU generation
-              price: item.price,
-              unit: item.unit,
-              category: categoryName
-            }
-          })
+            // Try by name (case insensitive)
+            product = await prisma.product.findFirst({
+                where: { 
+                    name: {
+                        equals: normalizedName,
+                        mode: 'insensitive'
+                    }
+                }
+            })
         }
+
+        if (!product) {
+          try {
+            product = await prisma.product.create({
+                data: {
+                name: normalizedName,
+                sku: skuCandidate,
+                price: item.price,
+                unit: item.unit,
+                category: categoryName
+                }
+            })
+          } catch (e) {
+             // Retry fetch if race condition
+             product = await prisma.product.findUnique({
+                where: { sku: skuCandidate }
+             })
+          }
+        }
+
+        if (!product) throw new Error(`Failed to process product: ${item.name}`)
 
         // Create PO Item
         await prisma.purchaseOrderItem.create({

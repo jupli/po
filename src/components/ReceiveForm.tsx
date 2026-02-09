@@ -153,7 +153,7 @@ export default function ReceiveForm({ po }: { po: any }) {
         <h3 className="text-lg font-medium text-gray-900 mb-4">Detail Bahan yang Dikirim</h3>
         
         {/* Helper function to render table */}
-        {['Bahan Kering', 'Bahan Basah', 'Lain-lain'].map((category) => {
+        {Array.from(new Set(items.map(i => i.productCategory))).map((category) => {
             const categoryItems = items.filter((i: any) => i.productCategory === category)
             if (categoryItems.length === 0) return null
 

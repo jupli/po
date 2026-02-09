@@ -55,28 +55,52 @@ export async function extractAndSaveRecipes(items: any[], date?: string, request
           description: `Auto-generated from purchase request (Base yield: ${portions} porsi)`,
           ingredients: {
             create: await Promise.all(ingredients.map(async (ing) => {
-              // Ensure product exists or find it
+              // Normalize name
+              const normalizedName = ing.name.trim()
+              // Create a clean SKU candidate (uppercase, replace non-alphanumeric with -)
+              const skuCandidate = normalizedName.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+              // 1. Try finding by clean SKU first
               let product = await prisma.product.findUnique({
-                where: { sku: ing.name.toUpperCase().replace(/\s+/g, '_') }
+                where: { sku: skuCandidate }
               })
 
+              // 2. If not found, try finding by Name (case-insensitive)
               if (!product) {
-                  // Try finding by name if SKU fails
                   product = await prisma.product.findFirst({
-                      where: { name: ing.name }
+                      where: { 
+                        name: {
+                            equals: normalizedName,
+                            mode: 'insensitive'
+                        }
+                      }
                   })
               }
               
-              // If still no product, create a temporary one (optional, or skip)
+              // 3. If still not found, create it (WITHOUT random suffix)
               if (!product) {
-                 product = await prisma.product.create({
-                   data: {
-                     name: ing.name,
-                     sku: ing.name.toUpperCase().replace(/\s+/g, '_') + '_' + Math.random().toString(36).substr(2, 5),
-                     unit: ing.unit,
-                     quantity: 0
-                   }
-                 })
+                 try {
+                    product = await prisma.product.create({
+                        data: {
+                            name: normalizedName,
+                            sku: skuCandidate,
+                            unit: ing.unit,
+                            quantity: 0,
+                            category: 'Lain-lain' // Default category, user can organize later
+                        }
+                    })
+                 } catch (createError) {
+                    // If creation fails (likely race condition or SKU collision), try fetching again
+                    console.log(`Product creation failed for ${skuCandidate}, retrying fetch...`)
+                    product = await prisma.product.findUnique({
+                        where: { sku: skuCandidate }
+                    })
+                 }
+              }
+
+              // If still undefined (should not happen), throw or skip
+              if (!product) {
+                  throw new Error(`Failed to resolve product for ingredient: ${ing.name}`)
               }
 
               // Calculate quantity per 1 portion
